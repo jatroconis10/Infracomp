@@ -5,15 +5,26 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-
+import java.awt.FontFormatException;
+import java.io.PrintStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.Security;
+import java.security.cert.X509Certificate;
+import java.util.Random;
+import javax.crypto.SecretKey;
+import utils.Seguridad;
+import utils.Transformacion;
 public class Main {
-
+	
     public static void main(String[] args) {
         String hostName = "localhost";
         int portNumber  = 8654;
-
         try (
-                Socket clientSocket = new Socket(hostName, portNumber);
+        		Socket clientSocket = new Socket(hostName, portNumber);
                 PrintWriter out =
                         new PrintWriter(clientSocket.getOutputStream(), true);
                 BufferedReader in =
@@ -37,7 +48,8 @@ public class Main {
             String seleccionStr;
             int seleccion;
 
-            System.out.println("Ingrese el número del algoritmo para cifrado simetrico: \n\t1. RSA");
+            System.out.println("Ingrese el numero del algoritmo para cifrado simetrico: \n\t1. DES \n\t2. AES"
+            		+ "\n\t3. Blowfish\n\t4. RC4 ");
             seleccionStr = stdIn.readLine();
             seleccion = Integer.parseInt(seleccionStr);
             switch (seleccion){
@@ -57,7 +69,7 @@ public class Main {
                     throw new ProtocolException("Opcion de algoritmo invalida");
             }
 
-            System.out.println("Ingrese el número del algoritmo para cifrado asimetrico: \n\t1. RSA");
+            System.out.println("Ingrese el numero del algoritmo para cifrado asimetrico: \n\t1. RSA");
             seleccionStr = stdIn.readLine();
             seleccion = Integer.parseInt(seleccionStr);
             switch (seleccion){
@@ -68,7 +80,7 @@ public class Main {
                     throw new ProtocolException("Opcion de algoritmo invalida");
             }
 
-            System.out.println("Ingrese el número del algoritmo de HMAC: \n\t1. HmacMD5\n\t2. HmacSHA1\n\t3. HmacM256");
+            System.out.println("Ingrese el numero del algoritmo de HMAC: \n\t1. HmacMD5\n\t2. HmacSHA1\n\t3. HmacM256");
             seleccionStr = stdIn.readLine();
             seleccion = Integer.parseInt(seleccionStr);
             switch (seleccion){
@@ -84,7 +96,7 @@ public class Main {
                 default:
                     throw new ProtocolException("Opcion de algoritmo invalida");
             }
-
+            
             out.println(respuestaAServidor);
             mensajeServidor = in.readLine();
             if(mensajeServidor.equals("ERROR")){
@@ -93,6 +105,31 @@ public class Main {
             else if(!mensajeServidor.equals("OK")){
                 throw new ProtocolException("El servidor envio un mensaje invalido");
             }
+            X509Certificate certificadoCliente;
+            
+            KeyPair keyPair = Seguridad.generateRSAKeyPair();
+            
+
+            try
+            {
+              Security.addProvider(new BouncyCastleProvider());
+              KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
+              keyGen.initialize(1024);
+              keyPair = keyGen.generateKeyPair();
+              X509Certificate cert = Seguridad.generateV3Certificate(keyPair);
+              StringWriter wr = new StringWriter();
+              JcaPEMWriter pemWriter = new JcaPEMWriter(wr);
+              pemWriter.writeObject(cert);
+              pemWriter.flush();
+              pemWriter.close();
+              String certStr = wr.toString();
+              write(writer, certStr);
+            }
+            catch (Exception e)
+            {
+              e.printStackTrace();
+            }
+            
 
 
 
