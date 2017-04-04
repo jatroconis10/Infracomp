@@ -1,23 +1,20 @@
 import Excepciones.ProtocolException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import utils.Seguridad;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.net.Socket;
-import java.awt.FontFormatException;
-import java.io.PrintStream;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.Security;
 import java.security.cert.X509Certificate;
-import java.util.Random;
-import javax.crypto.SecretKey;
-import utils.Seguridad;
-import utils.Transformacion;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 public class Main {
 	
     public static void main(String[] args) {
@@ -105,8 +102,7 @@ public class Main {
             else if(!mensajeServidor.equals("OK")){
                 throw new ProtocolException("El servidor envio un mensaje invalido");
             }
-            X509Certificate certificadoCliente;
-            
+
             KeyPair keyPair = Seguridad.generateRSAKeyPair();
             
 
@@ -115,7 +111,7 @@ public class Main {
               Security.addProvider(new BouncyCastleProvider());
               KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA", "BC");
               keyGen.initialize(1024);
-              keyPair = keyGen.generateKeyPair();
+              KeyPair keyPair = keyGen.generateKeyPair();
               X509Certificate cert = Seguridad.generateV3Certificate(keyPair);
               StringWriter wr = new StringWriter();
               JcaPEMWriter pemWriter = new JcaPEMWriter(wr);
@@ -123,7 +119,7 @@ public class Main {
               pemWriter.flush();
               pemWriter.close();
               String certStr = wr.toString();
-              write(writer, certStr);
+              out.println(certStr);
             }
             catch (Exception e)
             {
@@ -137,6 +133,8 @@ public class Main {
             e.printStackTrace();
         }catch (ProtocolException e){
             System.out.println(e.getMessage());
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
     }
 }
