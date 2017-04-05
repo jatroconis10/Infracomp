@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<component LANGUAGE_LEVEL="JDK_1_5" inheritJdk="true">
+<component LANGUAGE_LEVEL="JDK_1_8" inheritJdk="true">
 	<output-test url="file://$MODULE_DIR$/target/test-classes"/>
 	<contentEntry url="file://$MODULE_DIR$">
 		<testFolder url="file://$MODULE_DIR$/src/test/java"/>
@@ -7,5 +7,6 @@
 	</contentEntry>
 	<levels>
 		<level name="Maven: org.bouncycastle:bcprov-jdk15on:1.56" value="project"/>
+		<level name="Maven: org.bouncycastle:bcpkix-jdk15on:1.56" value="project"/>
 	</levels>
 </component>
