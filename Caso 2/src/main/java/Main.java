@@ -18,13 +18,17 @@ import java.security.KeyPairGenerator;
 import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class Main {
 	
     public static void main(String[] args) {
+        //Definicion de la infromacion para la conexion al socket
         String hostName = "localhost";
         int portNumber  = 8654;
+        
         try (
+                //Try with resources para que los recursos se cierren al final del try
         		Socket clientSocket = new Socket(hostName, portNumber);
                 PrintWriter out =
                         new PrintWriter(clientSocket.getOutputStream(), true);
@@ -45,6 +49,7 @@ public class Main {
                 throw new ProtocolException("Se esperaba OK pero se reicibio: " + mensajeServidor);
             }
 
+            //Se pregunta al cliente los algoritmos que desea usar
             respuestaAServidor = "ALGORITMOS:";
             String[] algCifrado = new String[3];
             String seleccionStr;
@@ -119,6 +124,7 @@ public class Main {
             KeyPair keyPair;
             
 
+            //Generacion y envio del CD
             try
             {
               Security.addProvider(new BouncyCastleProvider());
@@ -139,6 +145,7 @@ public class Main {
               e.printStackTrace();
             }
 
+            //Lectura del certificado digital del servidor
             try
             {
                 mensajeServidor = in.readLine();
@@ -163,21 +170,32 @@ public class Main {
                 throw new FontFormatException("Error en el certificado recibido, no se puede decodificar");
             }
 
-            long semilla = 5678L;
+            //Generador del reto
+            long semilla = 1996L;
             Random rand = new Random(semilla);
 
             byte[] reto1 = "reto1".getBytes();
             rand.nextBytes(reto1);
 
             String reto1String = Transformacion.toHexString(reto1);
-            out.println("");
+            System.out.println("Reto: " + reto1String);
             out.println(reto1String);
 
-            mensajeServidor = in.readLine();
-            byte[] resReto1Byte = Transformacion.decodificar(mensajeServidor);
-            String resReto1String = new String(resReto1Byte);
+            TimeUnit.SECONDS.sleep(1);
 
-            if(!resReto1String.equalsIgnoreCase(new String(reto1))){
+            //linea sobrante que se tiene que leer antes de leer el primer reto
+            in.readLine();
+            mensajeServidor = in.readLine();
+
+            System.out.println("Serv: " + mensajeServidor);
+            byte[] resReto1Byte = Transformacion.decodificar(mensajeServidor);
+            System.out.println("Serv decodificado: " + resReto1Byte);
+            String resReto1String = new String(resReto1Byte);
+            System.out.println("Serv string :" +  resReto1String);
+            String comparacion = new String(reto1);
+
+
+            if(!resReto1String.equalsIgnoreCase(comparacion)){
                 throw new ProtocolException("No se paso el reto 1");
             }else{
                 out.println("OK");
@@ -192,6 +210,7 @@ public class Main {
             mensajeServidor = in.readLine();
             byte[] symKeyBytes = Transformacion.decodificar(mensajeServidor);
 
+            //llave simetrica
             SecretKey key = new SecretKeySpec(symKeyBytes, 0, symKeyBytes.length, algCifrado[1]);
 
             respuestaAServidor = "";
@@ -201,6 +220,18 @@ public class Main {
 
             out.println(respuestaAServidor);
             mensajeServidor = in.readLine();
+            String[] respConsulta = mensajeServidor.split(":");
+
+            //Respuesta cifrada con llave simetrica
+            byte[] resp = Transformacion.decodificar(respConsulta[0]);
+
+            //Digest de la respuesta cifrado con la llave simetrica
+            byte[] respH = Transformacion.decodificar(respConsulta[1]);
+
+            //Verificacion
+            System.out.println(new String(resp));
+            System.out.println(new String(respH));
+
             out.println("OK");
 
         }catch (IOException e){
