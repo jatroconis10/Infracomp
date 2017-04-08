@@ -111,7 +111,7 @@ public class Main {
                 default:
                     throw new ProtocolException("Opcion de algoritmo invalida");
             }
-            
+
             out.println(respuestaAServidor);
             mensajeServidor = in.readLine();
             if(mensajeServidor.equals("ERROR")){
@@ -121,8 +121,8 @@ public class Main {
                 throw new ProtocolException("El servidor envio un mensaje invalido");
             }
 
-            KeyPair keyPair;
-            
+            KeyPair keyPair = null;
+
 
             //Generacion y envio del CD
             try
@@ -144,7 +144,7 @@ public class Main {
             {
               e.printStackTrace();
             }
-
+            X509Certificate certificadoServidor;
             //Lectura del certificado digital del servidor
             try
             {
@@ -153,15 +153,15 @@ public class Main {
                 strToDecode = strToDecode + mensajeServidor;
                 while (!mensajeServidor.equals("-----END CERTIFICATE-----"))
                 {
-                    strToDecode = strToDecode + mensajeServidor + "\n";
+                    strToDecode += mensajeServidor + "\n";
                     mensajeServidor = in.readLine();
                 }
                 strToDecode = strToDecode + mensajeServidor;
                 StringReader rea = new StringReader(strToDecode);
                 PemReader pr = new PemReader(rea);
-                PemObject pemcertificadoPuntoAtencion = pr.readPemObject();
-                X509CertificateHolder certHolder = new X509CertificateHolder(pemcertificadoPuntoAtencion.getContent());
-                X509Certificate certificadoCliente = new JcaX509CertificateConverter().getCertificate(certHolder);
+                PemObject pemCertificadoPuntoAtencion = pr.readPemObject();
+                X509CertificateHolder certHolder = new X509CertificateHolder(pemCertificadoPuntoAtencion.getContent());
+                certificadoServidor = new JcaX509CertificateConverter().getCertificate(certHolder);
                 pr.close();
             }
             catch (Exception e)
@@ -174,12 +174,16 @@ public class Main {
             long semilla = 1996L;
             Random rand = new Random(semilla);
 
-            byte[] reto1 = "reto1".getBytes();
+            byte[] reto1 = "random1".getBytes();
             rand.nextBytes(reto1);
 
-            String reto1String = Transformacion.toHexString(reto1);
+            String reto1String = new String(reto1);
             System.out.println("Reto: " + reto1String);
-            out.println(reto1String);
+
+            byte[] reto1Cifrado = Seguridad.asymmetricEncryption(reto1,certificadoServidor.getPublicKey(),algCifrado[1]);
+            String reto1CifradoString = Transformacion.toHexString(reto1Cifrado);
+            out.println(reto1CifradoString);
+
 
             TimeUnit.SECONDS.sleep(1);
 
@@ -189,13 +193,13 @@ public class Main {
 
             System.out.println("Serv: " + mensajeServidor);
             byte[] resReto1Byte = Transformacion.decodificar(mensajeServidor);
-            System.out.println("Serv decodificado: " + resReto1Byte);
-            String resReto1String = new String(resReto1Byte);
-            System.out.println("Serv string :" +  resReto1String);
+            byte[] resReto1Descifrado = Seguridad.asymmetricDecryption(resReto1Byte,keyPair.getPrivate(),algCifrado[1]);
+            String resReto1DescifradoString = new String(resReto1Descifrado);
+            System.out.println("Serv string :" +  resReto1DescifradoString);
             String comparacion = new String(reto1);
 
 
-            if(!resReto1String.equalsIgnoreCase(comparacion)){
+            if(!resReto1DescifradoString.equalsIgnoreCase(comparacion)){
                 throw new ProtocolException("No se paso el reto 1");
             }else{
                 out.println("OK");
@@ -204,35 +208,52 @@ public class Main {
             mensajeServidor = in.readLine();
             byte[] resReto2Bytes = Transformacion.decodificar(mensajeServidor);
             //Decodificar con llaves
-            String resReto2String= Transformacion.toHexString(resReto2Bytes);
+            byte[] reto2Descifrado = Seguridad.asymmetricDecryption(resReto2Bytes,keyPair.getPrivate(),algCifrado[1]);
+            byte[] reto2Cifrado = Seguridad.asymmetricEncryption(reto2Descifrado,certificadoServidor.getPublicKey(),algCifrado[1]);
+            String resReto2String= Transformacion.toHexString(reto2Cifrado);
 
             out.println(resReto2String);
             mensajeServidor = in.readLine();
-            byte[] symKeyBytes = Transformacion.decodificar(mensajeServidor);
-
+            byte[] symKeyBytesCifrada = Transformacion.decodificar(mensajeServidor);
+            byte[] symKeyBytes = Seguridad.asymmetricDecryption(symKeyBytesCifrada,keyPair.getPrivate(),algCifrado[1]);
             //llave simetrica
-            SecretKey key = new SecretKeySpec(symKeyBytes, 0, symKeyBytes.length, algCifrado[1]);
+            SecretKey key = new SecretKeySpec(symKeyBytes, 0, symKeyBytes.length, algCifrado[0]);
 
-            respuestaAServidor = "";
+
             System.out.println("Ingrese la cedula que quiere consultar");
             respuestaAServidor = stdIn.readLine();
-            respuestaAServidor += ":" + respuestaAServidor;
+            byte[] rtaBytes = respuestaAServidor.getBytes();
+
+            byte[] rtaCifrada = Seguridad.symmetricEncryption(rtaBytes, key,algCifrado[0]);
+
+            byte[] digest = Seguridad.hmacDigest(rtaBytes,key, algCifrado[2]);
+            byte[] digestCifrado = Seguridad.symmetricEncryption(digest,key,algCifrado[0]);
+
+            String rtaCifradaString = Transformacion.toHexString(rtaCifrada);
+            String digestCifradoString = Transformacion.toHexString(digestCifrado);
+
+            respuestaAServidor = rtaCifradaString + ":" + digestCifradoString;
 
             out.println(respuestaAServidor);
             mensajeServidor = in.readLine();
             String[] respConsulta = mensajeServidor.split(":");
 
             //Respuesta cifrada con llave simetrica
-            byte[] resp = Transformacion.decodificar(respConsulta[0]);
-
+            byte[] respCifrada = Transformacion.decodificar(respConsulta[0]);
+            byte[] respDecifrada = Seguridad.symmetricDecryption(respCifrada, key, algCifrado[0]);
             //Digest de la respuesta cifrado con la llave simetrica
-            byte[] respH = Transformacion.decodificar(respConsulta[1]);
+            byte[] respDigestCifrada = Transformacion.decodificar(respConsulta[1]);
+            byte[] respDigestDecifrada = Seguridad.symmetricDecryption(respDigestCifrada, key, algCifrado[0]);
 
             //Verificacion
-            System.out.println(new String(resp));
-            System.out.println(new String(respH));
+            boolean ver = Seguridad.verificarIntegridad(respDecifrada,key,algCifrado[2],respDigestDecifrada );
 
-            out.println("OK");
+            System.out.println(new String(respCifrada));
+            System.out.println(new String(respDigestCifrada));
+            if(ver)
+                out.println("OK");
+            else
+                out.println("Error, no se cumple integridad de respuesta");
 
         }catch (IOException e){
             e.printStackTrace();
