@@ -178,7 +178,7 @@ public class Main {
             rand.nextBytes(reto1);
 
             String reto1String = new String(reto1);
-            System.out.println("Reto: " + reto1String);
+            System.out.println("Reto 1: " + reto1String);
 
             byte[] reto1Cifrado = Seguridad.asymmetricEncryption(reto1,certificadoServidor.getPublicKey(),algCifrado[1]);
             String reto1CifradoString = Transformacion.toHexString(reto1Cifrado);
@@ -191,11 +191,10 @@ public class Main {
             in.readLine();
             mensajeServidor = in.readLine();
 
-            System.out.println("Serv: " + mensajeServidor);
             byte[] resReto1Byte = Transformacion.decodificar(mensajeServidor);
             byte[] resReto1Descifrado = Seguridad.asymmetricDecryption(resReto1Byte,keyPair.getPrivate(),algCifrado[1]);
             String resReto1DescifradoString = new String(resReto1Descifrado);
-            System.out.println("Serv string :" +  resReto1DescifradoString);
+            System.out.println("Serv string reto 1: " +  resReto1DescifradoString);
             String comparacion = new String(reto1);
 
 
@@ -240,16 +239,16 @@ public class Main {
 
             //Respuesta cifrada con llave simetrica
             byte[] respCifrada = Transformacion.decodificar(respConsulta[0]);
-            byte[] respDecifrada = Seguridad.symmetricDecryption(respCifrada, key, algCifrado[0]);
+            byte[] respDescifrada = Seguridad.symmetricDecryption(respCifrada, key, algCifrado[0]);
             //Digest de la respuesta cifrado con la llave simetrica
             byte[] respDigestCifrada = Transformacion.decodificar(respConsulta[1]);
-            byte[] respDigestDecifrada = Seguridad.symmetricDecryption(respDigestCifrada, key, algCifrado[0]);
+            byte[] respDigestDescifrada = Seguridad.symmetricDecryption(respDigestCifrada, key, algCifrado[0]);
 
             //Verificacion
-            boolean ver = Seguridad.verificarIntegridad(respDecifrada,key,algCifrado[2],respDigestDecifrada );
+            boolean ver = Seguridad.verificarIntegridad(respDescifrada,key,algCifrado[2],respDigestDescifrada );
 
-            System.out.println(new String(respCifrada));
-            System.out.println(new String(respDigestCifrada));
+            System.out.println(new String(respDescifrada));
+            System.out.println(new String(respDigestDescifrada));
             if(ver)
                 out.println("OK");
             else
