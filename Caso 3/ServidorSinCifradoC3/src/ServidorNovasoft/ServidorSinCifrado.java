@@ -96,10 +96,8 @@ public class ServidorSinCifrado implements Runnable {
 	/**
 	 * Metodo que inicializa un thread y lo pone a correr.
 	 * 
-	 * @param socket
+	 * @param id
 	 *            El socket por el cual llegan las conexiones.
-	 * @param semaphore
-	 *            Un semaforo que permite dar turnos para usar el socket.
 	 * @throws InterruptedException
 	 *             Si hubo un problema con el semaforo.
 	 * @throws SocketException

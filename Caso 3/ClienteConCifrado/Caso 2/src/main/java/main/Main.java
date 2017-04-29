@@ -17,6 +17,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import java.awt.*;
 import java.io.*;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -31,7 +32,7 @@ public class Main {
 	public long tiemposAuthServ;
 	public long tiemposResp;
 	
-	public void runCliente( String hostName, int portNumber){
+	public void runCliente( String hostName, int portNumber) throws Exception{
         
         try (
                 //Try with resources para que los recursos se cierren al final del try
@@ -195,14 +196,15 @@ public class Main {
             String reto1String = new String(reto1);
             //System.out.println("Reto 1: " + reto1String);
 
+            long tInit = System.currentTimeMillis();
             byte[] reto1Cifrado = Seguridad.asymmetricEncryption(reto1,certificadoServidor.getPublicKey(),algCifrado[1]);
             String reto1CifradoString = Transformacion.toHexString(reto1Cifrado);
             
-            long tInit = System.currentTimeMillis();
+
             out.println(reto1CifradoString);
 
 
-            TimeUnit.SECONDS.sleep(1);
+            //TimeUnit.SECONDS.sleep(1);
 
             //linea sobrante que se tiene que leer antes de leer el primer reto
             in.readLine();
@@ -256,8 +258,9 @@ public class Main {
 
             respuestaAServidor = rtaCifradaString + ":" + digestCifradoString;
 
-            out.println(respuestaAServidor);
             tInit = System.currentTimeMillis();
+            out.println(respuestaAServidor);
+
             mensajeServidor = in.readLine();
             tFin = System.currentTimeMillis();
             tiemposResp = tFin-tInit;
@@ -281,14 +284,12 @@ public class Main {
             else
                 out.println("Error, no se cumple integridad de respuesta");
 
-        }catch (IOException e){
-            e.printStackTrace();
         }catch (ProtocolException e){
             System.out.println(e.getMessage());
         }catch (Exception e){
-            e.printStackTrace();
+            throw e;
         }
-        System.out.println("tAuth: " + tiemposAuthServ + " tResp: " + tiemposResp);
+        System.out.println("tAuthS: " + tiemposAuthServ + " tResp: " + tiemposResp);
 	}
 	
     public static void main(String[] args) {
@@ -296,9 +297,11 @@ public class Main {
     	//Definicion de la infromacion para la conexion al socket
         String hostName = "localhost";
         int portNumber  = 8654;
-        
-    	Main cliente = new Main();
-    	cliente.runCliente(hostName, portNumber);
-    	System.out.println("tAuth: " + cliente.tiemposAuthServ + " tResp: " + cliente.tiemposResp);
+        try {
+            Main cliente = new Main();
+            cliente.runCliente(hostName, portNumber);
+        }catch (Exception e){
+
+        }
     }
 }

@@ -1,17 +1,14 @@
 package loadGenerator;
 
-import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import main.Main;
 import uniandes.gload.core.Task;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 public class ClientServerTask extends Task{
 
-	public static java.util.concurrent.CopyOnWriteArrayList<Long> tAuthServ = new CopyOnWriteArrayList<>();
-	public static java.util.concurrent.CopyOnWriteArrayList<Long> tResp = new CopyOnWriteArrayList<>();
+	public static CopyOnWriteArrayList<Long> tAuthServ = new CopyOnWriteArrayList<>();
+	public static CopyOnWriteArrayList<Long> tResp = new CopyOnWriteArrayList<>();
 	
 	private Main cliente;
 	

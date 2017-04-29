@@ -47,8 +47,8 @@ public class Worker {
 	// ----------------------------------------------------
 	public static final boolean SHOW_ERROR = true;
 	public static final boolean SHOW_S_TRACE = true;
-	public static final boolean SHOW_IN = true;
-	public static final boolean SHOW_OUT = true;
+	public static final boolean SHOW_IN = false;
+	public static final boolean SHOW_OUT = false;
 	// ----------------------------------------------------
 	// CONSTANTES PARA LA DEFINICION DEL PROTOCOLO
 	// ----------------------------------------------------
@@ -117,6 +117,9 @@ public class Worker {
 	 */
 
 	public static void atenderCliente(Socket s) {
+	    long tInit;
+	    long tResp;
+
 		try {
 			PrintWriter writer = new PrintWriter(s.getOutputStream(), true);
 			BufferedReader reader = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -258,8 +261,11 @@ public class Worker {
 				throw new FontFormatException("Error, no se paso el reto 1.");
 			}
 
+            tInit = System.currentTimeMillis();
 			byte[] reto2Cifrado = Seguridad.asymmetricEncryption(reto2, certificadoCliente.getPublicKey(), algoritmos[2]);
 			String reto2CifradoString = Transformacion.toHexString(reto2Cifrado);
+
+
 			write(writer, reto2CifradoString);
 
 			linea = read(reader);
@@ -270,6 +276,8 @@ public class Worker {
 			if (!reto2String.equalsIgnoreCase(reto2DescifradoString)) {
 				throw new FontFormatException("Error, no se paso el reto 2.");
 			}
+			tResp = System.currentTimeMillis() - tInit;
+            System.out.println("tAuthC: " + tResp);
 
 			// ////////////////////////////////////////////////////////////////////////
 			// Enviando llave simetrica cifrada con la llave publica del cliente

@@ -13,7 +13,6 @@ Caso 2.iml
 .mtj.tmp/
 
 # Package Files #
-*.jar
 *.war
 *.ear
 *.zip

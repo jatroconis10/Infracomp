@@ -1,3 +1,5 @@
+package main;
+
 import Excepciones.ProtocolException;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
@@ -21,11 +23,11 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-	
-    public static void main(String[] args) {
-        //Definicion de la infromacion para la conexion al socket
-        String hostName = "localhost";
-        int portNumber  = 8654;
+
+    public long tiemposAuthServ;
+    public long tiemposResp;
+
+    public void runCliente( String hostName, int portNumber) throws Exception{
         
         try (
                 //Try with resources para que los recursos se cierren al final del try
@@ -186,21 +188,16 @@ public class Main {
             byte[] reto1 = "reto1".getBytes();
             rand.nextBytes(reto1);
 
+            long tInit = System.currentTimeMillis();
             String reto1String = Transformacion.toHexString(reto1);
-            System.out.println("Reto: " + reto1String);
             out.println(reto1String);
-
-            TimeUnit.SECONDS.sleep(1);
 
             //linea sobrante que se tiene que leer antes de leer el primer reto
             in.readLine();
             mensajeServidor = in.readLine();
 
-            System.out.println("Serv: " + mensajeServidor);
             byte[] resReto1Byte = Transformacion.decodificar(mensajeServidor);
-            System.out.println("Serv decodificado: " + resReto1Byte);
             String resReto1String = new String(resReto1Byte);
-            System.out.println("Serv string :" +  resReto1String);
             String comparacion = new String(reto1);
 
 
@@ -209,6 +206,9 @@ public class Main {
             }else{
                 out.println("OK");
             }
+
+            long tFin = System.currentTimeMillis();
+            tiemposAuthServ = tFin-tInit;
 
             mensajeServidor = in.readLine();
             byte[] resReto2Bytes = Transformacion.decodificar(mensajeServidor);
@@ -223,12 +223,17 @@ public class Main {
             SecretKey key = new SecretKeySpec(symKeyBytes, 0, symKeyBytes.length, algCifrado[1]);
 
             respuestaAServidor = "";
-            System.out.println("Ingrese la cedula que quiere consultar");
-            respuestaAServidor = stdIn.readLine();
+            //System.out.println("Ingrese la cedula que quiere consultar");
+            respuestaAServidor = "502736";
             respuestaAServidor += ":" + respuestaAServidor;
 
+            tInit = System.currentTimeMillis();
             out.println(respuestaAServidor);
+
             mensajeServidor = in.readLine();
+            tFin = System.currentTimeMillis();
+            tiemposResp = tFin-tInit;
+
             String[] respConsulta = mensajeServidor.split(":");
 
             //Respuesta cifrada con llave simetrica
@@ -238,17 +243,29 @@ public class Main {
             byte[] respH = Transformacion.decodificar(respConsulta[1]);
 
             //Verificacion
-            System.out.println(new String(resp));
-            System.out.println(new String(respH));
+            //System.out.println(new String(resp));
+            //System.out.println(new String(respH));
 
             out.println("OK");
 
-        }catch (IOException e){
-            e.printStackTrace();
         }catch (ProtocolException e){
             System.out.println(e.getMessage());
         }catch (Exception e){
-            e.printStackTrace();
+            throw e;
+        }
+        System.out.println("tAuth: " + tiemposAuthServ + " tResp: " + tiemposResp);
+    }
+
+    public static void main(String[] args) {
+
+        //Definicion de la infromacion para la conexion al socket
+        String hostName = "localhost";
+        int portNumber  = 8654;
+        try {
+            Main cliente = new Main();
+            cliente.runCliente(hostName, portNumber);
+        }catch (Exception e){
+
         }
     }
 }
