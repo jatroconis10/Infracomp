@@ -66,7 +66,7 @@ public class Servidor implements Runnable {
 		int puerto = Integer.parseInt(br.readLine());
 		socket = new ServerSocket(puerto);
 
-		int numTreads = 16;
+		int numTreads = 8;
 		ExecutorService executor = Executors.newFixedThreadPool(numTreads);
 
 		for (int i = 0; i < numTreads; i++) {
@@ -87,7 +87,7 @@ public class Servidor implements Runnable {
 
 	/**
 	 * Metodo que inicializa un thread y lo pone a correr.
-	 * @param socket El socket por el cual llegan las conexiones.
+	 * @param id El socket por el cual llegan las conexiones.
 	 * @throws SocketException si hay problemas con el manejo del socket
 	 */
 	public Servidor(int id) throws SocketException {
@@ -117,7 +117,7 @@ public class Servidor implements Runnable {
 				e.printStackTrace();
 				continue;
 			}
-			System.out.println("Thread " + id + " recibe a un cliente.");
+			//System.out.println("Thread " + id + " recibe a un cliente.");
 			Worker.atenderCliente(s);
 		}
 	}

@@ -261,7 +261,7 @@ public class Worker {
 				throw new FontFormatException("Error, no se paso el reto 1.");
 			}
 
-            tInit = System.currentTimeMillis();
+            tInit = System.nanoTime()/1000000;
 			byte[] reto2Cifrado = Seguridad.asymmetricEncryption(reto2, certificadoCliente.getPublicKey(), algoritmos[2]);
 			String reto2CifradoString = Transformacion.toHexString(reto2Cifrado);
 
@@ -276,7 +276,7 @@ public class Worker {
 			if (!reto2String.equalsIgnoreCase(reto2DescifradoString)) {
 				throw new FontFormatException("Error, no se paso el reto 2.");
 			}
-			tResp = System.currentTimeMillis() - tInit;
+			tResp = System.nanoTime()/1000000 - tInit;
             System.out.println("tAuthC: " + tResp);
 
 			// ////////////////////////////////////////////////////////////////////////
