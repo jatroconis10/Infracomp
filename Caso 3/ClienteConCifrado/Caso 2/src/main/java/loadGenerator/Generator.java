@@ -24,8 +24,8 @@ public class Generator {
 
 	public static void main(String... args) {
 
-		int numberOfTasks = 800;
-		int gapBetweenTasks = 10;
+		int numberOfTasks = 80;
+		int gapBetweenTasks = 100;
 		
 		@SuppressWarnings("unused")
 		Generator gen = new Generator(numberOfTasks, gapBetweenTasks);

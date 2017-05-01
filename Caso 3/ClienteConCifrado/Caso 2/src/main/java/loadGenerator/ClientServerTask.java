@@ -30,8 +30,8 @@ public class ClientServerTask extends Task{
 	@Override
 	public void execute() {
 		// TODO Auto-generated method stub
-		String hostName = "localhost";
-        int portNumber  = 8654;
+		String hostName = "172.24.42.60";
+        int portNumber  = 8900;
         try {
             cliente = new Main();
             cliente.runCliente(hostName, portNumber);
