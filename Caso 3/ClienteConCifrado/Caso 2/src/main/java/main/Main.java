@@ -196,7 +196,7 @@ public class Main {
             String reto1String = new String(reto1);
             //System.out.println("Reto 1: " + reto1String);
 
-            long tInit = System.currentTimeMillis();
+            long tInit = System.nanoTime()/1000000;
             byte[] reto1Cifrado = Seguridad.asymmetricEncryption(reto1,certificadoServidor.getPublicKey(),algCifrado[1]);
             String reto1CifradoString = Transformacion.toHexString(reto1Cifrado);
             
@@ -224,7 +224,7 @@ public class Main {
             }
             
            
-            long tFin = System.currentTimeMillis();
+            long tFin = System.nanoTime()/1000000;
             tiemposAuthServ = tFin-tInit;
 
             mensajeServidor = in.readLine();
@@ -258,11 +258,11 @@ public class Main {
 
             respuestaAServidor = rtaCifradaString + ":" + digestCifradoString;
 
-            tInit = System.currentTimeMillis();
+            tInit = System.nanoTime()/1000000;
             out.println(respuestaAServidor);
 
             mensajeServidor = in.readLine();
-            tFin = System.currentTimeMillis();
+            tFin = System.nanoTime()/1000000;
             tiemposResp = tFin-tInit;
             
             String[] respConsulta = mensajeServidor.split(":");
@@ -284,12 +284,13 @@ public class Main {
             else
                 out.println("Error, no se cumple integridad de respuesta");
 
+            System.out.println("tAuthS: " + tiemposAuthServ + " tResp: " + tiemposResp);
         }catch (ProtocolException e){
             System.out.println(e.getMessage());
         }catch (Exception e){
             throw e;
         }
-        System.out.println("tAuthS: " + tiemposAuthServ + " tResp: " + tiemposResp);
+
 	}
 	
     public static void main(String[] args) {
